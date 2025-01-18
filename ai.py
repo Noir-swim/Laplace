@@ -142,9 +142,9 @@ class WaterIceAI:
         if total_stones < 20:
             depth = 3
         elif total_stones < 50:
-            depth = 5
+            depth = 8
         else:
-            depth = 7
+            depth = 15
 
         _, best_move = self.negamax(board, stone, depth, -math.inf, math.inf)
         if best_move:
