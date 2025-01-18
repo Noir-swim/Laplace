@@ -1,6 +1,10 @@
 import math
+import random
 
 class WaterIceAI:
+    def __init__(self):
+        self.transposition_table = {}
+
     def face(self):
         return "🐢"
 
@@ -88,39 +92,40 @@ class WaterIceAI:
         opponent_moves = len(self.get_valid_moves(board, 3 - stone))
         score += (my_moves - opponent_moves) * 10
 
-        # 安定石の評価（盤面周りをスキャン）
-        stable_score = self.calculate_stable_stones(board, stone)
-        score += stable_score * 20
-
         return score
 
-    def calculate_stable_stones(self, board, stone):
-        stable_count = 0
-        # 角を起点に縦横方向で安定石をスキャン
-        directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
-        for cx, cy in [(0, 0), (0, 5), (5, 0), (5, 5)]:
-            for dx, dy in directions:
-                x, y = cx, cy
-                while 0 <= x < len(board[0]) and 0 <= y < len(board):
-                    if board[y][x] == stone:
-                        stable_count += 1
-                    else:
-                        break
-                    x += dx
-                    y += dy
-        return stable_count
+    def move_ordering(self, board, stone):
+        # Moves are sorted by their heuristic score to improve pruning efficiency
+        valid_moves = self.get_valid_moves(board, stone)
+        scored_moves = []
+        for move in valid_moves:
+            temp_board = self.apply_move(board, stone, move[0], move[1])
+            score = self.evaluate_board(temp_board, stone)
+            scored_moves.append((score, move))
+        scored_moves.sort(reverse=True, key=lambda x: x[0])  # Descending order
+        return [move for _, move in scored_moves]
 
     def negamax(self, board, stone, depth, alpha, beta):
+        board_key = tuple(tuple(row) for row in board)  # Immutable board for caching
+
+        # キャッシュを利用する
+        if (board_key, stone, depth) in self.transposition_table:
+            return self.transposition_table[(board_key, stone, depth)]
+
         valid_moves = self.get_valid_moves(board, stone)
 
         # 終端条件
         if depth == 0 or not valid_moves:
-            return self.evaluate_board(board, stone), None
+            score = self.evaluate_board(board, stone)
+            return score, None
 
         max_eval = -math.inf
         best_move = None
 
-        for x, y in valid_moves:
+        # Move orderingを使用
+        ordered_moves = self.move_ordering(board, stone)
+
+        for x, y in ordered_moves:
             temp_board = self.apply_move(board, stone, x, y)
             eval, _ = self.negamax(temp_board, 3 - stone, depth - 1, -beta, -alpha)
             eval = -eval  # ネガマックス特有の符号反転
@@ -133,6 +138,8 @@ class WaterIceAI:
             if alpha >= beta:
                 break  # βカット
 
+        # キャッシュに保存
+        self.transposition_table[(board_key, stone, depth)] = (max_eval, best_move)
         return max_eval, best_move
 
     def place(self, board, stone):
@@ -142,7 +149,7 @@ class WaterIceAI:
         if total_stones < 20:
             depth = 10
         elif total_stones < 50:
-            depth = 15
+            depth = 14
         else:
             depth = 18
 
