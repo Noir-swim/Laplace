@@ -67,25 +67,23 @@ class WaterIceAI:
 
         score = 0
 
-        # 盤面評価
         for y in range(len(board)):
             for x in range(len(board[0])):
                 if board[y][x] == stone:
                     if (x, y) in corner_positions:
-                        score += 100  # 角を確保
+                        score += 100
                     elif (x, y) in edge_positions:
-                        score += 10   # 辺を確保
+                        score += 10
                     else:
-                        score += 1    # その他
+                        score += 1
                 elif board[y][x] == 3 - stone:
                     if (x, y) in corner_positions:
-                        score -= 100  # 相手の角
+                        score -= 100
                     elif (x, y) in edge_positions:
-                        score -= 10   # 相手の辺
+                        score -= 10
                     else:
-                        score -= 1    # その他
+                        score -= 1
 
-        # モビリティ
         my_moves = len(self.get_valid_moves(board, stone))
         opponent_moves = len(self.get_valid_moves(board, 3 - stone))
         score += (my_moves - opponent_moves) * 5
@@ -105,16 +103,15 @@ class WaterIceAI:
             max_eval = max(max_eval, eval)
             alpha = max(alpha, eval)
             if alpha >= beta:
-                break  # βカット
+                break
 
         return max_eval
 
     def place(self, board, stone):
         valid_moves = self.get_valid_moves(board, stone)
         if not valid_moves:
-            # 有効な手がない場合は自分のターンをスキップ
             print(f"{self.face()}はスキップします。")
-            return -1, -1  # スキップを示す特殊な座標
+            return -1, -1
 
         total_stones = sum(row.count(1) + row.count(2) for row in board)
 
