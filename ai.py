@@ -138,13 +138,13 @@ class WaterIceAI:
     def place(self, board, stone):
         total_stones = sum(row.count(1) + row.count(2) for row in board)
 
-        # 序盤: 深さ5, 中盤: 深さ8, 終盤: 深さ15
+        # 序盤: 深さ5, 中盤: 深さ8, 終盤: 深さ18
         if total_stones < 20:
             depth = 5
         elif total_stones < 50:
             depth = 8
         else:
-            depth = 15
+            depth = 18
 
         _, best_move = self.negamax(board, stone, depth, -math.inf, math.inf)
         if best_move:
