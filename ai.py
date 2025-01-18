@@ -2,9 +2,6 @@ import math
 import random
 
 class WaterIceAI:
-    def __init__(self):
-        self.transposition_table = {}
-
     def face(self):
         return "🐢"
 
@@ -138,10 +135,6 @@ class WaterIceAI:
             if alpha >= beta:
                 break  # βカット
 
-        # キャッシュに保存
-        self.transposition_table[(board_key, stone, depth)] = (max_eval, best_move)
-        return max_eval, best_move
-
     def place(self, board, stone):
         total_stones = sum(row.count(1) + row.count(2) for row in board)
 
@@ -151,7 +144,7 @@ class WaterIceAI:
         elif total_stones < 50:
             depth = 13
         else:
-            depth = 16
+            depth = 18
 
         _, best_move = self.negamax(board, stone, depth, -math.inf, math.inf)
         if best_move:
