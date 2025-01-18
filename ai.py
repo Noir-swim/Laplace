@@ -110,6 +110,12 @@ class WaterIceAI:
         return max_eval
 
     def place(self, board, stone):
+        valid_moves = self.get_valid_moves(board, stone)
+        if not valid_moves:
+            # 有効な手がない場合は自分のターンをスキップ
+            print(f"{self.face()}はスキップします。")
+            return -1, -1  # スキップを示す特殊な座標
+
         total_stones = sum(row.count(1) + row.count(2) for row in board)
 
         if total_stones < 20:
@@ -122,11 +128,11 @@ class WaterIceAI:
         best_move = None
         max_eval = -float('inf')
 
-        for x, y in self.get_valid_moves(board, stone):
+        for x, y in valid_moves:
             new_board = self.apply_move(board, stone, x, y)
             eval = -self.negamax(new_board, 3 - stone, depth - 1, -float('inf'), float('inf'))
             if eval > max_eval:
                 max_eval = eval
                 best_move = (x, y)
 
-        return best_move if best_move else random.choice(self.get_valid_moves(board, stone))
+        return best_move
