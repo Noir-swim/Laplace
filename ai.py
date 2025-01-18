@@ -142,7 +142,7 @@ class WaterIceAI:
         if total_stones < 20:
             depth = 10
         elif total_stones < 50:
-            depth = 14
+            depth = 15
         else:
             depth = 18
 
