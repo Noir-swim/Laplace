@@ -3,7 +3,7 @@ import random
 
 class WaterIceAI:
     def face(self):
-        return "🐢"
+        return "🐢🩵"
 
     def get_valid_moves(self, board, stone):
         valid_moves = []
