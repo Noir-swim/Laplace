@@ -1,7 +1,7 @@
 import math
 import random
 
-class weareteamphysAI:
+class WaterIceAI:
     def face(self):
         return "🎓nori"
 
