@@ -2,7 +2,7 @@ import math
 
 class WaterIceAI:
     def face(self):
-        return "🎓nori"
+        return "🐢"
 
     def get_valid_moves(self, board, stone):
         moves = []
