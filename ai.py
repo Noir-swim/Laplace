@@ -113,11 +113,11 @@ class WaterIceAI:
         total_stones = sum(row.count(1) + row.count(2) for row in board)
 
         if total_stones < 20:
-            depth = 7
+            depth = 5
         elif total_stones < 50:
-            depth = 10
+            depth = 8
         else:
-            depth = 15
+            depth = 12
 
         best_move = None
         max_eval = -float('inf')
