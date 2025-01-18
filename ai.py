@@ -2,9 +2,6 @@ import math
 import random
 
 class WaterIceAI:
-    def __init__(self):
-        self.transposition_table = {}  # トランスポジションテーブルの初期化
-
     def face(self):
         return "🐢"
 
@@ -96,16 +93,9 @@ class WaterIceAI:
         return score
 
     def negamax(self, board, stone, depth, alpha, beta):
-        board_key = tuple(tuple(row) for row in board)
-
-        # キャッシュを利用する
-        if (board_key, stone, depth) in self.transposition_table:
-            return self.transposition_table[(board_key, stone, depth)]
-
         valid_moves = self.get_valid_moves(board, stone)
         if depth == 0 or not valid_moves:
-            score = self.evaluate_board(board, stone)
-            return score
+            return self.evaluate_board(board, stone)
 
         max_eval = -float('inf')
 
@@ -117,8 +107,6 @@ class WaterIceAI:
             if alpha >= beta:
                 break  # βカット
 
-        # キャッシュに保存
-        self.transposition_table[(board_key, stone, depth)] = max_eval
         return max_eval
 
     def place(self, board, stone):
