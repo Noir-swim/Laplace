@@ -1,6 +1,10 @@
 import math
 import random
 
+# グローバル定義
+BLACK = 1
+WHITE = 2
+
 class WaterIceAI:
     def face(self):
         return "🎓nori"
