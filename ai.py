@@ -1,21 +1,16 @@
 import math
-import random
-
-# グローバル定義
-BLACK = 1
-WHITE = 2
 
 class WaterIceAI:
     def face(self):
         return "🎓nori"
 
     def get_valid_moves(self, board, stone):
-        valid_moves = []
+        moves = []
         for y in range(len(board)):
             for x in range(len(board[0])):
                 if self.can_place_x_y(board, stone, x, y):
-                    valid_moves.append((x, y))
-        return valid_moves
+                    moves.append((x, y))
+        return moves
 
     def can_place_x_y(self, board, stone, x, y):
         if board[y][x] != 0:
@@ -65,77 +60,83 @@ class WaterIceAI:
         return new_board
 
     def evaluate_board(self, board, stone):
-        """
-        改良された評価関数
-        - 角: 高評価
-        - 辺: 中評価
-        - モビリティ: 高評価
-        """
         corner_positions = [(0, 0), (0, 5), (5, 0), (5, 5)]
-        edge_positions = [(0, 1), (0, 4), (1, 0), (1, 5),
-                          (4, 0), (4, 5), (5, 1), (5, 4)]
+        bad_positions = [(0, 1), (1, 0), (4, 0), (5, 1), (0, 4), (1, 5), (4, 5), (5, 4)]
 
         score = 0
 
-        # 盤面評価
+        # 基本評価（角や辺を優先）
         for y in range(len(board)):
             for x in range(len(board[0])):
                 if board[y][x] == stone:
                     if (x, y) in corner_positions:
-                        score += 100  # 角を確保
-                    elif (x, y) in edge_positions:
-                        score += 10   # 辺を確保
+                        score += 100
+                    elif (x, y) in bad_positions:
+                        score -= 50
                     else:
-                        score += 1    # その他
+                        score += 1
                 elif board[y][x] == 3 - stone:
                     if (x, y) in corner_positions:
-                        score -= 100  # 相手の角
-                    elif (x, y) in edge_positions:
-                        score -= 10   # 相手の辺
+                        score -= 100
+                    elif (x, y) in bad_positions:
+                        score += 50
                     else:
-                        score -= 1    # その他
+                        score -= 1
 
-        # モビリティ
+        # モビリティ（合法手数の差）
         my_moves = len(self.get_valid_moves(board, stone))
         opponent_moves = len(self.get_valid_moves(board, 3 - stone))
-        score += (my_moves - opponent_moves) * 5
+        score += (my_moves - opponent_moves) * 10
+
+        # 安定石の評価（盤面周りをスキャン）
+        stable_score = self.calculate_stable_stones(board, stone)
+        score += stable_score * 20
 
         return score
 
-    def minimax(self, board, stone, depth, maximizing, alpha=-math.inf, beta=math.inf):
+    def calculate_stable_stones(self, board, stone):
+        stable_count = 0
+        # 角を起点に縦横方向で安定石をスキャン
+        directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
+        for cx, cy in [(0, 0), (0, 5), (5, 0), (5, 5)]:
+            for dx, dy in directions:
+                x, y = cx, cy
+                while 0 <= x < len(board[0]) and 0 <= y < len(board):
+                    if board[y][x] == stone:
+                        stable_count += 1
+                    else:
+                        break
+                    x += dx
+                    y += dy
+        return stable_count
+
+    def negamax(self, board, stone, depth, alpha, beta):
         valid_moves = self.get_valid_moves(board, stone)
 
+        # 終端条件
         if depth == 0 or not valid_moves:
             return self.evaluate_board(board, stone), None
 
+        max_eval = -math.inf
         best_move = None
-        if maximizing:
-            max_eval = -math.inf
-            for x, y in valid_moves:
-                temp_board = self.apply_move(board, stone, x, y)
-                eval, _ = self.minimax(temp_board, 3 - stone, depth - 1, False, alpha, beta)
-                if eval > max_eval:
-                    max_eval = eval
-                    best_move = (x, y)
-                alpha = max(alpha, eval)
-                if beta <= alpha:
-                    break  # βカット
-            return max_eval, best_move
-        else:
-            min_eval = math.inf
-            for x, y in valid_moves:
-                temp_board = self.apply_move(board, stone, x, y)
-                eval, _ = self.minimax(temp_board, 3 - stone, depth - 1, True, alpha, beta)
-                if eval < min_eval:
-                    min_eval = eval
-                    best_move = (x, y)
-                beta = min(beta, eval)
-                if beta <= alpha:
-                    break  # αカット
-            return min_eval, best_move
+
+        for x, y in valid_moves:
+            temp_board = self.apply_move(board, stone, x, y)
+            eval, _ = self.negamax(temp_board, 3 - stone, depth - 1, -beta, -alpha)
+            eval = -eval  # ネガマックス特有の符号反転
+
+            if eval > max_eval:
+                max_eval = eval
+                best_move = (x, y)
+
+            alpha = max(alpha, eval)
+            if alpha >= beta:
+                break  # βカット
+
+        return max_eval, best_move
 
     def place(self, board, stone):
-        total_stones = sum(row.count(BLACK) + row.count(WHITE) for row in board)
+        total_stones = sum(row.count(1) + row.count(2) for row in board)
 
         # 序盤: 深さ3, 中盤: 深さ5, 終盤: 深さ7
         if total_stones < 20:
@@ -145,9 +146,8 @@ class WaterIceAI:
         else:
             depth = 7
 
-        _, best_move = self.minimax(board, stone, depth, True)
+        _, best_move = self.negamax(board, stone, depth, -math.inf, math.inf)
         if best_move:
             return best_move
         else:
-            valid_moves = self.get_valid_moves(board, stone)
-            return random.choice(valid_moves) if valid_moves else None
+            return random.choice(self.get_valid_moves(board, stone))
